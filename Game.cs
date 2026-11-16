@@ -24,6 +24,8 @@
         public float Speed { get; private set; }
         public GameState State { get; private set; }
 
+        public Sky Sky { get; }
+
         private const float StartSpeed = 3f;   // Başlangıç hızı
         private const float MaxSpeed = 7f;     // Hız en fazla bu kadar artabilir
         private const int PipeSpacing = 220;   // Borular arası mesafe
@@ -37,6 +39,7 @@
             Width = width;
             Height = height;
             Bird = new Bird(80, PlayHeight / 2f);
+            Sky = new Sky(Width, PlayHeight);
             LoadHighScore();
             Reset();
         }
@@ -71,6 +74,8 @@
         // Her oyun adımında çağrılır
         public void Update()
         {
+            Sky.Update(); // Gökyüzü her durumda hareket etsin
+
             // Bekleme ekranında kuş yerinde süzülsün
             if (State == GameState.Ready)
             {
@@ -166,11 +171,14 @@
         // Bütün oyunu çiz
         public void Draw(Graphics g)
         {
+            Sky.Draw(g);  // En arkada gökyüzü
+
             foreach (Pipe pipe in Pipes)
                 pipe.Draw(g);
 
             DrawGround(g);
             Bird.Draw(g);
+            Sky.DrawNightOverlay(g, Height);  // Gece karartması (yazılardan önce)
 
             // Skor (en üstte, oyun sırasında)
             if (State == GameState.Playing)
