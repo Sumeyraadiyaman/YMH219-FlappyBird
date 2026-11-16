@@ -7,6 +7,7 @@
         public int Width { get; } = 60;         // Boru genişliği
         public int GapSize { get; } = 160;      // Kuşun geçeceği boşluğun yüksekliği
         public int GapY { get; private set; }   // Boşluğun başladığı yükseklik
+        public bool Passed { get; set; }        // Kuş bu boruyu geçti mi? (skor için)
 
         private readonly int screenHeight;
 
@@ -33,6 +34,7 @@
         public void Reset(float newX)
         {
             X = newX;
+            Passed = false;
             RandomizeGap();
         }
 
@@ -46,10 +48,18 @@
         public RectangleF TopRect => new RectangleF(X, 0, Width, GapY);
         public RectangleF BottomRect => new RectangleF(X, GapY + GapSize, Width, screenHeight - (GapY + GapSize));
 
-        // Kuş bu borulardan birine değiyor mu?
+        // Kuş borulara değiyor mu?
         public bool CollidesWith(Bird bird)
         {
-            return bird.Bounds.IntersectsWith(TopRect) || bird.Bounds.IntersectsWith(BottomRect);
+            RectangleF b = bird.Bounds;
+
+            // Kuş yatayda borunun hizasında mı?
+            bool inPipeColumn = b.Right > X && b.Left < X + Width;
+
+            // Kuş boşluğun dışına taşıyor mu? (ekranın üstünden kaçmak da sayılır)
+            bool outsideGap = b.Top < GapY || b.Bottom > GapY + GapSize;
+
+            return inPipeColumn && outsideGap;
         }
 
         // Boruları çiz

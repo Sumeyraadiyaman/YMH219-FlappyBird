@@ -5,11 +5,7 @@ namespace YMH219_FlappyBird
         // Oyun döngüsü: belirli aralıklarla Tick olayını tetikler
         private readonly System.Windows.Forms.Timer gameTimer = new System.Windows.Forms.Timer();
 
-        private Bird bird;
-        private readonly List<Pipe> pipes = new List<Pipe>();
-
-        private const float PipeSpeed = 3f;     // Boruların sola kayma hızı
-        private const int PipeSpacing = 220;    // İki boru arasındaki yatay mesafe
+        private readonly Game game;
 
         public Form1()
         {
@@ -24,57 +20,46 @@ namespace YMH219_FlappyBird
             BackColor = Color.SkyBlue;
             DoubleBuffered = true; // Titremeyi önler
 
-            bird = new Bird(80, 250);
-
-            // İki boru oluştur: biri ekranın hemen sağında, diğeri onun arkasında
-            pipes.Add(new Pipe(ClientSize.Width, ClientSize.Height));
-            pipes.Add(new Pipe(ClientSize.Width + PipeSpacing, ClientSize.Height));
+            game = new Game(ClientSize.Width, ClientSize.Height);
 
             // Olayları bağla
             gameTimer.Interval = 20; // 20 milisaniyede bir (saniyede ~50 kare)
             gameTimer.Tick += GameTimer_Tick;
             KeyDown += Form1_KeyDown;
+            MouseDown += Form1_MouseDown;
             Paint += Form1_Paint;
 
             gameTimer.Start();
         }
 
-        // Her 20 ms'de bir çalışır: oyunu bir adım ilerletir
+        // Her 20 ms'de bir: oyunu bir adım ilerlet ve ekranı yeniden çiz
         private void GameTimer_Tick(object? sender, EventArgs e)
         {
-            bird.Update();
-
-            foreach (Pipe pipe in pipes)
-            {
-                pipe.Update(PipeSpeed);
-
-                // Ekrandan çıkan boruyu en sona taşı
-                if (pipe.IsOffScreen)
-                    pipe.Reset(pipe.X + pipes.Count * PipeSpacing);
-            }
-
-            // GEÇİCİ: Kuş ekrandan düşerse başa al (Game Over'ı sonra ekleyeceğiz)
-            if (bird.Y > ClientSize.Height)
-                bird = new Bird(80, 250);
-
-            Invalidate(); // Ekranı yeniden çizdir
+            game.Update();
+            Invalidate();
         }
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Space || e.KeyCode == Keys.Up)
-                bird.Jump();
+                game.Flap();
+
+            // Oyun bittiyse R ile yeniden başlat
+            if (e.KeyCode == Keys.R && game.State == GameState.GameOver)
+                game.Reset();
+        }
+
+        // Fareyle tıklayınca da zıplasın
+        private void Form1_MouseDown(object? sender, MouseEventArgs e)
+        {
+            game.Flap();
         }
 
         // Ekran her yeniden çizildiğinde çalışır
         private void Form1_Paint(object? sender, PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias; // Kenarları yumuşat
-
-            foreach (Pipe pipe in pipes)
-                pipe.Draw(e.Graphics);
-
-            bird.Draw(e.Graphics); // Kuş boruların önünde görünsün diye en son çizilir
+            game.Draw(e.Graphics);
         }
     }
 }
