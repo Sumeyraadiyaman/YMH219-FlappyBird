@@ -74,7 +74,9 @@
         // Her oyun adımında çağrılır
         public void Update()
         {
-            Sky.Update(); // Gökyüzü her durumda hareket etsin
+            // Oyun bittiyse gökyüzü de dursun (o an donmuş gibi kalsın)
+            if (State != GameState.GameOver)
+                Sky.Update();
 
             // Bekleme ekranında kuş yerinde süzülsün
             if (State == GameState.Ready)

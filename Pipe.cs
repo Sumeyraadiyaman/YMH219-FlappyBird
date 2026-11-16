@@ -1,4 +1,6 @@
-﻿namespace YMH219_FlappyBird
+﻿using System.Drawing.Drawing2D;
+
+namespace YMH219_FlappyBird
 {
     // Bir engel çifti: üstte bir boru, altta bir boru, ortada geçiş boşluğu
     public class Pipe
@@ -62,12 +64,17 @@
             return inPipeColumn && outsideGap;
         }
 
-        // Boruları çiz
+        // Boruları çiz: soldan sağa açıktan koyuya geçen pastel mint
         public void Draw(Graphics g)
         {
-            using SolidBrush body = new SolidBrush(Color.FromArgb(115, 191, 46));
-            using SolidBrush cap = new SolidBrush(Color.FromArgb(90, 160, 30));
-            using Pen border = new Pen(Color.FromArgb(60, 110, 20), 2);
+            Color light = Color.FromArgb(175, 238, 218);   // Sol: açık mint
+            Color dark = Color.FromArgb(80, 170, 150);     // Sağ: koyu mint
+
+            using LinearGradientBrush body = new LinearGradientBrush(
+                new RectangleF(X, 0, Width, 10), light, dark, LinearGradientMode.Horizontal);
+            using LinearGradientBrush cap = new LinearGradientBrush(
+                new RectangleF(X - 5, 0, Width + 10, 10), light, dark, LinearGradientMode.Horizontal);
+            using Pen border = new Pen(Color.FromArgb(55, 130, 115), 2);
 
             // Gövdeler
             g.FillRectangle(body, TopRect);

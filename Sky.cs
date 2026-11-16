@@ -9,7 +9,7 @@ namespace YMH219_FlappyBird
         private readonly int horizonY;   // Ufuk çizgisi (zeminin başladığı yer)
 
         private float cycle = 0f;                        // Gün içindeki konum: 0 = öğlen, 0.5 = gece yarısı
-        private const float CycleSpeed = 1f / 3000f;     // 3000 adımda bir tam gün (~60 saniye)
+        private const float CycleSpeed = 1f / 9000f;     // 3000 adımda bir tam gün (~60 saniye)
         private int tick = 0;                            // Yıldız parıltısı için sayaç
 
         private readonly List<Cloud> clouds = new List<Cloud>();
