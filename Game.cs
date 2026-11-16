@@ -19,6 +19,8 @@
         public Bird Bird { get; private set; }
         public List<Pipe> Pipes { get; } = new List<Pipe>();
         public int Score { get; private set; }
+        public int HighScore { get; private set; }
+        public bool IsNewRecord { get; private set; }
         public float Speed { get; private set; }
         public GameState State { get; private set; }
 
@@ -27,11 +29,15 @@
         private const int PipeSpacing = 220;   // Borular arası mesafe
         private const int PipeCount = 2;       // Ekrandaki boru sayısı
 
+        // Rekorun saklanacağı dosya (uygulamanın çalıştığı klasörde)
+        private readonly string highScoreFile = Path.Combine(Application.StartupPath, "highscore.txt");
+
         public Game(int width, int height)
         {
             Width = width;
             Height = height;
             Bird = new Bird(80, PlayHeight / 2f);
+            LoadHighScore();
             Reset();
         }
 
@@ -48,6 +54,7 @@
 
             Score = 0;
             Speed = StartSpeed;
+            IsNewRecord = false;
             State = GameState.Ready;
         }
 
@@ -64,8 +71,15 @@
         // Her oyun adımında çağrılır
         public void Update()
         {
+            // Bekleme ekranında kuş yerinde süzülsün
+            if (State == GameState.Ready)
+            {
+                Bird.Hover();
+                return;
+            }
+
             if (State != GameState.Playing)
-                return; // Oynanmıyorsa hiçbir şey hareket etmesin
+                return; // Oyun bittiyse hiçbir şey hareket etmesin
 
             Bird.Update();
 
@@ -87,12 +101,28 @@
 
                 // Boruya çarptı mı?
                 if (pipe.CollidesWith(Bird))
-                    State = GameState.GameOver;
+                    EndGame();
             }
 
             // Zemine çarptı mı?
             if (Bird.Y + Bird.Size >= PlayHeight)
-                State = GameState.GameOver;
+                EndGame();
+        }
+
+        // Oyunu bitir ve gerekirse rekoru kaydet
+        private void EndGame()
+        {
+            if (State == GameState.GameOver)
+                return; // Zaten bittiyse tekrar işlem yapma
+
+            State = GameState.GameOver;
+
+            if (Score > HighScore)
+            {
+                HighScore = Score;
+                IsNewRecord = true;
+                SaveHighScore();
+            }
         }
 
         // Her 5 puanda bir oyunu biraz hızlandır
@@ -100,6 +130,37 @@
         {
             if (Score % 5 == 0 && Speed < MaxSpeed)
                 Speed += 0.5f;
+        }
+
+        // Rekoru dosyadan oku
+        private void LoadHighScore()
+        {
+            try
+            {
+                if (File.Exists(highScoreFile))
+                {
+                    string text = File.ReadAllText(highScoreFile);
+                    if (int.TryParse(text, out int value))
+                        HighScore = value;
+                }
+            }
+            catch
+            {
+                HighScore = 0; // Dosya okunamazsa rekoru 0 kabul et, oyun yine çalışsın
+            }
+        }
+
+        // Rekoru dosyaya yaz
+        private void SaveHighScore()
+        {
+            try
+            {
+                File.WriteAllText(highScoreFile, HighScore.ToString());
+            }
+            catch
+            {
+                // Kaydedilemezse oyunu durdurmaya değmez; sessizce devam et
+            }
         }
 
         // Bütün oyunu çiz
@@ -119,12 +180,19 @@
             {
                 DrawCenteredText(g, "FLAPPY BIRD", 32, 120);
                 DrawCenteredText(g, "Başlamak için SPACE", 16, 330);
+                DrawCenteredText(g, $"En yüksek skor: {HighScore}", 14, 380);
             }
 
             if (State == GameState.GameOver)
             {
                 DrawCenteredText(g, "GAME OVER", 34, 150);
                 DrawCenteredText(g, $"Skor: {Score}", 22, 220);
+
+                if (IsNewRecord)
+                    DrawCenteredText(g, "YENİ REKOR!", 18, 265, Brushes.Gold);
+                else
+                    DrawCenteredText(g, $"En yüksek: {HighScore}", 16, 268);
+
                 DrawCenteredText(g, "Yeniden başlamak için R", 16, 330);
             }
         }
@@ -139,7 +207,7 @@
         }
 
         // Yazıyı yatayda ortalayarak, gölgeli şekilde yazar
-        private void DrawCenteredText(Graphics g, string text, float size, float y)
+        private void DrawCenteredText(Graphics g, string text, float size, float y, Brush? color = null)
         {
             using Font font = new Font("Segoe UI", size, FontStyle.Bold);
             using StringFormat format = new StringFormat { Alignment = StringAlignment.Center };
@@ -147,8 +215,8 @@
             RectangleF area = new RectangleF(0, y, Width, size * 2);
             RectangleF shadow = new RectangleF(2, y + 2, Width, size * 2);
 
-            g.DrawString(text, font, Brushes.Black, shadow, format);  // Gölge
-            g.DrawString(text, font, Brushes.White, area, format);    // Asıl yazı
+            g.DrawString(text, font, Brushes.Black, shadow, format);           // Gölge
+            g.DrawString(text, font, color ?? Brushes.White, area, format);   // Asıl yazı
         }
     }
 }
