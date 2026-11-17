@@ -4,7 +4,7 @@ Nesne Tabanlı Programlama (YMH219) dersi kapsamında Windows Forms ile gelişti
 
 ## Kullanılan Teknolojiler
 
-- C# / .NET 8
+- C# / .NET 10
 - Windows Forms
 - GDI+ (`System.Drawing`) ile çizim
 - Visual Studio 2022
